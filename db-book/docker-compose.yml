@@ -1,0 +1,36 @@
+networks:
+  oop-net:
+    name: oop-net
+    external: true
+
+volumes:
+  vol-db-book:
+    name: vol-db-book
+
+services:
+  db-book:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: img-db-book:latest
+    container_name: con-db-book
+    hostname: db-book
+    env_file:
+      - .env
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    ports:
+      - "${HOST_PORT}:3306" # Expose Port 33062 pada Host/Laptop
+    volumes:
+      - vol-db-book:/var/lib/mysql # File backup cadangan di host
+      # - ./init-scripts/schema.sql:/docker-entrypoint-initdb.d/schema.sql # Otomatisasi inisialisasi tabel
+    networks:
+      - oop-net
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
